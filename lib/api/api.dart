@@ -12,31 +12,7 @@ class PlantIdService {
   PlantIdService(this.apiKey);
 
   // POST method for identifying plants
-  Future<PlantIdentificationResponse> identifyPlantJson(
-      List<String> images) async {
-    try {
-      final response = await http.post(
-        Uri.parse(postApiUrl),
-        headers: {
-          'Api-Key': apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({'images': images}),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Assuming status code 201 is also a successful response
-        return PlantIdentificationResponse.fromJson(jsonDecode(response.body));
-      } else {
-        throw Exception('Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Exception: $e');
-    }
-  }
-
-  // GET method to retrieve detailed information using the access_token
-  Future<dynamic> getPlantDetails(String accessToken,
+  Future<PlantIdentificationResponse> identifyPlantJson(List<String> images,
       {String language = 'en',
       List<String> details = const [
         'common_names',
@@ -50,23 +26,26 @@ class PlantIdService {
         'synonyms',
         'edible_parts',
         'watering'
+            'propagation_methods'
       ]}) async {
+    final String detailsQuery = details.join(',');
     final Uri fullUrl =
-        Uri.parse(getApiBaseUrl + accessToken).replace(queryParameters: {
-      'details': details.join(','),
-      'language': language,
-    });
+        Uri.parse('$postApiUrl?details=$detailsQuery&language=$language');
 
     try {
-      final response = await http.get(
+      final response = await http.post(
         fullUrl,
         headers: {
           'Api-Key': apiKey,
+          'Content-Type': 'application/json',
         },
+        body: jsonEncode({'images': images}),
       );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print(
+            'Response Body post: ${response.body}'); // Print the response body
+        return PlantIdentificationResponse.fromJson(jsonDecode(response.body));
       } else {
         throw Exception('Error: ${response.statusCode}');
       }

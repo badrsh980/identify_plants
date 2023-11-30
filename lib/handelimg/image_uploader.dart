@@ -28,12 +28,17 @@ class ImageUploader {
     return null;
   }
 
-  Future<String?> uploadImage(File? imageFile) async {
+  Future<PlantIdentificationResponse?> uploadImage(File? imageFile) async {
     final base64Image = await getImageBase64(imageFile);
     if (base64Image != null) {
-      PlantIdentificationResponse response =
-          await plantIdService.identifyPlantJson([base64Image]);
-      return response.result?.classification?.suggestions?.first.name;
+      try {
+        PlantIdentificationResponse response =
+            await plantIdService.identifyPlantJson([base64Image]);
+        return response; // Returning the PlantIdentificationResponse object
+      } catch (e) {
+        print("Error during image upload: $e");
+        return null;
+      }
     } else {
       print("Image conversion failed or no image selected");
       return null;
